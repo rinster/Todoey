@@ -11,9 +11,17 @@ import UIKit
 class ToDoListViewController: UITableViewController {
     
     var itemArray = ["Find Mike", "Buy Eggos", "Destroy Demagorgon"]
+    
+    //access the USER DEFAULTS - this is an interface to the user's defaults where you store key value pairs persistently across the launches of your app
+    let defaults = UserDefaults.standard
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        //setting the item array to match what's saved in the user defaults
+        if let items = defaults.array(forKey: "ToDoListArray") as? [String] {
+            itemArray = items
+        }
      
     }
 
@@ -62,7 +70,10 @@ class ToDoListViewController: UITableViewController {
             //if user adds empty textfield, it will be an empty cell
             self.itemArray.append(textField.text!)
             
-            //everytime an item is added, the tavle view will reload data
+            //also saving the item into the user defaults var
+            self.defaults.set(self.itemArray, forKey: "TodoListArray")
+            
+            //everytime an item is added, the table view will reload data
             self.tableView.reloadData()
         }
         
