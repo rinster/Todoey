@@ -8,7 +8,7 @@
 
 import Foundation
 
-class Item {
+class Item : Codable {
     var title: String = ""
     //by default items will start off as not being not - so false
     var done: Bool = false

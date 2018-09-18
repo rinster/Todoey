@@ -13,33 +13,21 @@ class ToDoListViewController: UITableViewController {
     //accessing the model class - an array of item objects
     var itemArray = [Item]()
     
-    //access the USER DEFAULTS - this is an interface to the user's defaults where you store key value pairs persistently across the launches of your app
-    let defaults = UserDefaults.standard
+    //creating a file path to the documents folder - to the user's domain mask and save their personal items associated
+    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
 
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let newItem = Item()
-        newItem.title = "Find Mike"
-        itemArray.append(newItem)
+
+        print(dataFilePath)
+    
         
-        let newItem2 = Item()
-        newItem.title = "Buy Eggos"
-        itemArray.append(newItem2)
-        
-        let newItem3 = Item()
-        newItem.title = "Destroy Demagorgon"
-        itemArray.append(newItem3)
-        
-        //setting the item array to match what's saved in the user defaults
-        //accessing the userDefaults as an array of items
-        if let items = defaults.array(forKey: "ToDoListArray") as? [Item] {
-            itemArray = items
-        }
+        loadItems()
      
     }
 
-    //MARK - Tableview DataSource Methods
+    //MARK: - Tableview DataSource Methods
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return itemArray.count
     }
@@ -66,7 +54,7 @@ class ToDoListViewController: UITableViewController {
         return cell
     }
     
-    //MARK - Table View Delegate Methods - Checkmark & Accessories
+    //MARK: - Table View Delegate Methods - Checkmark & Accessories
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         //printing the row that was selected to the console
             //print(indexPath.row)
@@ -76,14 +64,13 @@ class ToDoListViewController: UITableViewController {
         //this toggles the checkmark to either true or false using the not bool operator and reversing what it use to be
         itemArray[indexPath.row].done = !itemArray[indexPath.row].done
         
-        //reload the data so that the checkmarks appear
-        tableView.reloadData()
+        saveItems()
         
         //this makes the gray hightlight flash instead of linger. Comment out to see the difference!
         tableView.deselectRow(at: indexPath, animated: true)
     }
     
-    //MARK - Add new items
+    //MARK: - Add new items
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
         
         //this var has the scope of the entire addButtonPressed IBAction
@@ -101,14 +88,11 @@ class ToDoListViewController: UITableViewController {
             //if user adds empty textfield, it will be an empty cell
             self.itemArray.append(newItem)
             
-            //also saving the item into the user defaults var
-            self.defaults.set(self.itemArray, forKey: "TodoListArray")
+            self.saveItems()
             
-            //everytime an item is added, the table view will reload data
-            self.tableView.reloadData()
         }
         
-        //adding information through an alert
+        //MARK: adding information through a MODAL alert
         alert.addTextField { (alertTextField) in
             alertTextField.placeholder = "Create new Item"
             
@@ -121,5 +105,32 @@ class ToDoListViewController: UITableViewController {
         
         present(alert, animated: true, completion: nil)
     }
-}
+    
+    //MARK: - Model Manipulation Methods
+    
+    func saveItems()  {
+        let encoder =  PropertyListEncoder()
+        
+        do {
+            let data = try encoder.encode(itemArray)
+            try data.write(to: dataFilePath!)
+        } catch {
+            print("Error encoding item array, \(error)")
+        }
+        
+        //everytime an item is added, the table view will reload data
+        self.tableView.reloadData()
+    }
+    
+    func loadItems()  {
+        if let data = try? Data(contentsOf: dataFilePath!) {
+            let decoder = PropertyListDecoder()
+            do {
+                itemArray = try decoder.decode([Item].self, from: data)
+            } catch {
+             print("Error encoding item array, \(error)")
+        }
+    }
 
+    }
+}
